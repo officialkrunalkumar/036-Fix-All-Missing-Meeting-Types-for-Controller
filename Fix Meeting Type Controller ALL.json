@@ -1,0 +1,286 @@
+{
+  "name": "Fix Meeting Type: \"Controller\" ALL",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/meetings/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer HubSpot_App_Token"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filters\": [\n    {\n      \"propertyName\": \"hubspot_team_id\",\n      \"operator\": \"EQ\",\n      \"value\": 8316195\n    },\n    {\n      \"propertyName\": \"hs_activity_type\",\n      \"operator\": \"NOT_HAS_PROPERTY\"\n    }\n  ],\n  \"limit\": 200\n} ",
+        "options": {}
+      },
+      "id": "839d2ce9-d88f-465e-9350-e56e97902f29",
+      "name": "Get Meetings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "49b44633-1039-4803-ab6e-f3651322f205",
+      "name": "Split Meetings",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        40,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id",
+        "options": {}
+      },
+      "id": "1c499db7-c137-4a0c-9e32-ad95e79a7b4e",
+      "name": "Split IDs",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        260,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3cf609a6-16ec-44b3-8e45-086622e75d9f",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/meetings/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer HubSpot_App_Token"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"properties\": {\n  \"hs_activity_type\": \"Controller\"\n  }\n}",
+        "options": {}
+      },
+      "id": "15a90dad-cc14-402b-9e9f-8985d2b77a1a",
+      "name": "Set Activity Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1aebba0f-413e-4069-9fec-8dfa02e8ac17",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9b02e624-9bcb-4066-bfae-637f05e1aa45",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -180,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deactivate",
+        "workflowId": {
+          "__rl": true,
+          "value": "Vyt00mun14f8sGr0",
+          "mode": "list",
+          "cachedResultName": "Fix Meeting Type: \"Controller\" ALL (#Vyt00mun14f8sGr0)"
+        },
+        "requestOptions": {}
+      },
+      "id": "8b28b495-d940-4d45-b0aa-3c925b6abe0e",
+      "name": "Deactivate",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        40,
+        760
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "tSiDtHYDNEDV8ngk",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "4f436613-2b9a-4c6d-98f3-c474d78be744",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -620,
+        520
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Meetings": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Meetings": {
+      "main": [
+        [
+          {
+            "node": "Split IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split IDs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Set Activity Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Activity Type": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Meetings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deactivate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Meetings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b13ddaec-996d-46c7-941d-4516f63c0975",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f35844c20bd7f8456f907e3b5a901af1cf08cec7fee985138953357fd244e5bd"
+  },
+  "id": "Vyt00mun14f8sGr0",
+  "tags": []
+}
